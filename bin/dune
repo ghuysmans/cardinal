@@ -1,0 +1,4 @@
+(executable
+ (public_name cardinal)
+ (name main)
+ (libraries cardinal))
