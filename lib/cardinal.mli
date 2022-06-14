@@ -7,6 +7,8 @@ module E : sig
   val dst : t -> V.t
 end
 
+val is_start : V.t -> bool
+
 open Graph.Graphviz.DotAttributes
 val iter_edges_e : (E.t -> unit) -> t -> unit
 val graph_attributes : t -> graph list

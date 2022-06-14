@@ -66,6 +66,8 @@ module E = struct
   let dst = snd
 end
 
+let is_start {V.a; x; y} = fst a.(y).(x) = '0'
+
 let iter_edges_e f a =
   iter_vertex (fun v -> iter_succ (fun v' -> f (v, v')) a v) a
 
