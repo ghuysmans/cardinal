@@ -15,48 +15,68 @@
 (*                                                                        *)
 (**************************************************************************)
 
-module Mark(G : Graph.Coloring.GM) = struct
+module Mark
+    (G : Graph.Traverse.G)
+    (M : Graph.Sig.MARK with type graph := G.t and type vertex := G.V.t) =
+struct
 
-  let set i w x = G.Mark.set w (G.Mark.get w land lnot (1 lsl i) lor x lsl i)
-  let clear g i = G.iter_vertex (fun w -> set i w 0) g
-
-  let dfs g i start =
-    clear g i;
+  let dfs g start =
+    M.clear g;
     let rec visit v =
-      if G.Mark.get v = 0 then begin
-        set i v 1;
+      if M.get v = 0 then begin
+        M.set v 1;
         G.iter_succ visit g v
       end
     in
     visit start
 
-  let find_path (type a) (f : _ -> a option) g i start =
+  let find_path (type a) (f : _ -> a option) g start =
     let exception Exit of a option in
-    clear g i;
+    M.clear g;
     let rec visit p v =
-      set i v 1;
+      M.set v 1;
       G.iter_succ
         (fun w ->
-           if G.Mark.get w = 0 then
+           if M.get w = 0 then
              let p' = w :: p in
              match f p' with
              | None -> visit p' w
              | Some _ as x -> raise (Exit x))
         g v;
-      set i v 0
+      M.set v 0
     in
     try visit [start] start; None
     with Exit x -> x
 
+end
+
+module type MARK_WITHOUT_CLEAR = sig
+  type vertex
+  val get : vertex -> int
+  val set : vertex -> int -> unit
+end
+
+module Bitfield
+    (G : Graph.Traverse.G)
+    (M : MARK_WITHOUT_CLEAR with type vertex := G.V.t) =
+struct
+
+  module F (P : sig val i : int end) = struct
+    let get = M.get
+    let set w x = M.set w (M.get w land lnot (1 lsl P.i) lor (x lsl P.i))
+    let clear g = G.iter_vertex (fun w -> set w 0) g
+  end
+
   let decompose f t =
-    let ct = G.nb_vertex t in
-    let xs =
-      G.fold_vertex (fun v acc -> if f v then v :: acc else acc) t [] |>
-      Array.of_list
-      (* TODO sort? *)
+    let ct, xs =
+      G.fold_vertex (fun v (ct, xs) ->
+        ct + 1, if f v then v :: xs else xs
+      ) t (0, [])
     in
+    let xs = Array.of_list xs in (* TODO sort? *)
     let rec f paths i =
-      find_path (fun p ->
+      let module B = Mark (G) (F (struct let i = i end)) in
+      B.find_path (fun p ->
         if i = Array.length xs - 1 then
           let accessible =
             (* TODO compute it earlier *)
@@ -74,7 +94,7 @@ module Mark(G : Graph.Coloring.GM) = struct
             None
         else
           f (p :: paths) (i + 1)
-      ) t i xs.(i)
+      ) t xs.(i)
     in
     f [] 0
 

@@ -1,5 +1,5 @@
 module GV = Graph.Graphviz.Dot (Cardinal)
-module H = Hamilton.Mark (Cardinal)
+module H = Hamilton.Bitfield (Cardinal) (Cardinal.Mark)
 
 let read_lines () =
   let rec f acc =
