@@ -28,19 +28,25 @@ let fold_vertex f a init =
 let iter_vertex f a = fold_vertex (fun v () -> f v) a ()
 let nb_vertex a = fold_vertex (fun _ -> succ) a 0
 
-let fold_succ f a {V.x; y; _} init =
-  let w, h = Array.length a.(0), Array.length a in
-  let g dx dy acc =
-    let x', y' = x + dx, y + dy in
-    if x' >= 0 && x' < w && y' >= 0 && y' < h && fst a.(y).(x) <= fst a.(y').(x') then
-      f {V.a; x = x'; y = y'} acc
-    else
-      acc
-  in
-  g 0 1 init |>
-  g 1 0 |>
-  g 0 (-1) |>
-  g (-1) 0
+let connected {V.a; x; y} {V.a = a'; x = x'; y = y'} =
+  a == a' && fst a.(y).(x) <= fst a.(y').(x')
+
+let fold_succ f a ({V.x; y; _} as v) init =
+  if a == v.a then
+    let w, h = Array.length a.(0), Array.length a in
+    let g dx dy acc =
+      let v' = {V.a; x = x + dx; y = y + dy} in
+      if v'.x >= 0 && v'.x < w && v'.y >= 0 && v'.y < h && connected v v' then
+        f v' acc
+      else
+        acc
+    in
+    g 0 1 init |>
+    g 1 0 |>
+    g 0 (-1) |>
+    g (-1) 0
+  else
+    init
 
 let out_degree a v = fold_succ (fun _ -> succ) a v 0
 let iter_succ f a v = fold_succ (fun v () -> f v) a v ()
@@ -90,3 +96,18 @@ let get_subgraph _ = None
 let default_edge_attributes _ = []
 
 let edge_attributes _ = []
+
+let valid_solution a paths =
+  let open Mark in
+  iter_vertex (fun v -> set v 0) a;
+  paths |> List.for_all (function
+    | [] -> true (* weird but ok *)
+    | h :: t ->
+      let test_and_set v = get v = 0 && (set v 1; true) in
+      test_and_set h &&
+      snd @@ List.fold_left (fun (v, ok) v' ->
+        v',
+        ok && connected v v' && test_and_set v'
+      ) (h, true) t
+  ) &&
+  fold_vertex (fun v ok -> ok && get v = 1) a true

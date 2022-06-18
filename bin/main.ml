@@ -26,11 +26,14 @@ let () =
     begin match H.decompose is_start t with
     | None -> print_endline "not found"
     | Some paths ->
-      List.iter (fun p ->
-        Printf.printf "path:";
-        List.iter (fun x -> Printf.printf " %s" (vertex_name x)) p;
-        Printf.printf "\n"
-      ) paths
+      if valid_solution t paths then
+        List.iter (fun p ->
+          Printf.printf "path:";
+          List.iter (fun x -> Printf.printf " %s" (vertex_name x)) p;
+          Printf.printf "\n"
+        ) paths
+      else
+        print_endline "invalid solution"
     end
   | _ ->
     Printf.eprintf "usage: %s [-r]\n" Sys.argv.(0);

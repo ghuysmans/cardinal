@@ -18,3 +18,5 @@ val vertex_attributes : V.t -> vertex list
 val get_subgraph : V.t -> subgraph option
 val default_edge_attributes : t -> edge list
 val edge_attributes : E.t -> edge list
+
+val valid_solution : t -> V.t list list -> bool
