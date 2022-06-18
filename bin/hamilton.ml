@@ -30,7 +30,7 @@ struct
     in
     visit start
 
-  let find_path (type a) (f : _ -> a option) g start =
+  let find_rev_path (type a) (f : _ -> a option) g start =
     let exception Exit of a option in
     M.clear g;
     let rec visit p v =
@@ -47,6 +47,11 @@ struct
     in
     try visit [start] start; None
     with Exit x -> x
+
+  let find_path f g start =
+    match find_rev_path f g start with
+    | None -> None
+    | Some p -> Some (List.rev p)
 
 end
 
@@ -76,7 +81,7 @@ struct
     let xs = Array.of_list xs in (* TODO sort? *)
     let rec f paths i =
       let module B = Mark (G) (F (struct let i = i end)) in
-      B.find_path (fun p ->
+      B.find_rev_path (fun p ->
         if i = Array.length xs - 1 then
           let accessible =
             (* TODO compute it earlier *)
@@ -96,7 +101,9 @@ struct
           f (p :: paths) (i + 1)
       ) t xs.(i)
     in
-    f [] 0
+    match f [] 0 with
+    | None -> None
+    | Some paths -> Some (List.map List.rev paths)
 
 end
 
