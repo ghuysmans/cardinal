@@ -1,0 +1,4 @@
+(rule
+ (alias runtest)
+ (deps 1 11 111x1x 11x11 411434)
+ (action (run ../bin/main.exe %{deps})))
