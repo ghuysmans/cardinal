@@ -15,26 +15,35 @@
 (*                                                                        *)
 (**************************************************************************)
 
+module type MARK_WITHOUT_CLEAR = sig
+  type vertex
+  val get : vertex -> int
+  val set : vertex -> int -> unit
+end
+
 module Mark
     (G : Graph.Traverse.G)
-    (M : Graph.Sig.MARK with type graph := G.t and type vertex := G.V.t) =
+    (M : MARK_WITHOUT_CLEAR with type vertex := G.V.t) =
 struct
 
-  let dfs g start =
-    M.clear g;
+  let clear g i =
+    G.iter_vertex (fun v -> if M.get v = i then M.set v 0) g
+
+  let dfs g start i =
+    clear g i;
     let rec visit v =
       if M.get v = 0 then begin
-        M.set v 1;
+        M.set v i;
         G.iter_succ visit g v
       end
     in
     visit start
 
-  let find_rev_path (type a) (f : _ -> a option) g start =
+  let find_rev_path (type a) (f : _ -> a option) g start i =
     let exception Exit of a option in
-    M.clear g;
+    clear g i;
     let rec visit p v =
-      M.set v 1;
+      M.set v i;
       G.iter_succ
         (fun w ->
            if M.get w = 0 then
@@ -48,29 +57,10 @@ struct
     try visit [start] start; None
     with Exit x -> x
 
-  let find_path f g start =
-    match find_rev_path f g start with
+  let find_path f g start i =
+    match find_rev_path f g start i with
     | None -> None
     | Some p -> Some (List.rev p)
-
-end
-
-module type MARK_WITHOUT_CLEAR = sig
-  type vertex
-  val get : vertex -> int
-  val set : vertex -> int -> unit
-end
-
-module Bitfield
-    (G : Graph.Traverse.G)
-    (M : MARK_WITHOUT_CLEAR with type vertex := G.V.t) =
-struct
-
-  module F (P : sig val i : int end) = struct
-    let get = M.get
-    let set w x = M.set w (M.get w land lnot (1 lsl P.i) lor (x lsl P.i))
-    let clear g = G.iter_vertex (fun w -> set w 0) g
-  end
 
   let decompose f t =
     let ct, xs =
@@ -80,8 +70,7 @@ struct
     in
     let xs = Array.of_list xs in (* TODO sort? *)
     let rec f paths i =
-      let module B = Mark (G) (F (struct let i = i end)) in
-      B.find_rev_path (fun p ->
+      find_rev_path (fun p ->
         if i = Array.length xs - 1 then
           let accessible =
             (* TODO compute it earlier *)
@@ -99,7 +88,7 @@ struct
             None
         else
           f (p :: paths) (i + 1)
-      ) t xs.(i)
+      ) t xs.(i) (i + 1)
     in
     match f [] 0 with
     | None -> None

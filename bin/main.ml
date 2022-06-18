@@ -1,5 +1,5 @@
 module GV = Graph.Graphviz.Dot (Cardinal)
-module H = Hamilton.Bitfield (Cardinal) (Cardinal.Mark)
+module H = Hamilton.Mark (Cardinal) (Cardinal.Mark)
 open Cardinal
 
 let input_lines ch =
