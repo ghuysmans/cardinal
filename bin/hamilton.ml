@@ -41,20 +41,23 @@ struct
 
   let find_rev_path (type a) (f : _ -> a option) g start i =
     let exception Exit of a option in
-    clear g i;
     let rec visit p v =
-      M.set v i;
       G.iter_succ
         (fun w ->
            if M.get w = 0 then
              let p' = w :: p in
+             M.set w i;
              match f p' with
-             | None -> visit p' w
+             | None -> visit p' w; M.set w 0
              | Some _ as x -> raise (Exit x))
-        g v;
-      M.set v 0
+        g v
     in
-    try visit [start] start; None
+    try
+      clear g i;
+      M.set start i;
+      visit [start] start;
+      M.set start 0;
+      None
     with Exit x -> x
 
   let find_path f g start i =
