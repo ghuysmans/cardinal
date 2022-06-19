@@ -1,3 +1,3 @@
 (library
  (name cardinal)
- (libraries ocamlgraph))
+ (libraries ocamlgraph ANSITerminal))

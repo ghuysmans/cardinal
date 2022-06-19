@@ -111,3 +111,26 @@ let valid_solution a paths =
       ) (h, true) t
   ) &&
   fold_vertex (fun v ok -> ok && get v = 1) a true
+
+let dump ?(prefix="") a =
+  let open ANSITerminal in
+  let palette =
+    Array.map (fun x -> Background x) [|
+      Default;
+      Red;
+      Green;
+      Yellow;
+      Blue;
+      Magenta;
+      Cyan;
+      White;
+    |]
+  in
+  for y = 0 to Array.length a - 1 do
+    printf [] "%s" prefix;
+    for x = 0 to Array.length a.(0) - 1 do
+      let ch, path = a.(y).(x) in
+      printf [palette.(path)] "%c" ch
+    done;
+    printf [] "\n"
+  done

@@ -46,6 +46,7 @@ let () =
         begin match H.decompose is_start t with
         | None -> report false "no solution found"
         | Some paths ->
+          dump ~prefix:"#" t;
           if valid_solution t paths then
             List.map (fun p -> List.map vertex_name p |> String.concat " ") paths |>
             String.concat ", " |>
