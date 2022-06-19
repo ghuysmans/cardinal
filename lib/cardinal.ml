@@ -29,7 +29,8 @@ let iter_vertex f a = fold_vertex (fun v () -> f v) a ()
 let nb_vertex a = fold_vertex (fun _ -> succ) a 0
 
 let connected {V.a; x; y} {V.a = a'; x = x'; y = y'} =
-  a == a' && fst a.(y).(x) <= fst a.(y').(x')
+  let c, c' = fst a.(y).(x), fst a.(y').(x') in
+  a == a' && c <= c' && c' <> '0'
 
 let fold_succ f a ({V.x; y; _} as v) init =
   if a == v.a then
