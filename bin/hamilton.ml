@@ -75,17 +75,7 @@ struct
     let rec f paths i =
       find_rev_path (fun p ->
         if i = Array.length xs - 1 then
-          let accessible =
-            (* TODO compute it earlier *)
-            (* FIXME why not?
-            fold_vertex (fun v acc ->
-              acc + if Mark.get v = 0 then 0 else 1
-            ) t 0
-            *)
-            List.concat (p :: paths) |>
-            List.length
-          in
-          if accessible = ct then
+          if List.(length (concat (p :: paths))) = ct then
             Some (p :: paths)
           else
             None
