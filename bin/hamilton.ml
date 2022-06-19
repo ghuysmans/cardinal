@@ -71,21 +71,16 @@ struct
         ct + 1, if f v then v :: xs else xs
       ) t (0, [])
     in
-    let xs = Array.of_list xs in (* TODO sort? *)
-    let rec f paths i =
-      find_rev_path (fun p ->
-        if i = Array.length xs - 1 then
-          if List.(length (concat (p :: paths))) = ct then
-            Some (p :: paths)
-          else
-            None
+    let rec f paths i = function
+      | [] ->
+        if List.(length (concat paths)) = ct then
+          Some (List.(map rev) paths)
         else
-          f (p :: paths) (i + 1)
-      ) t xs.(i) (i + 1)
+          None
+      | x :: xs ->
+        find_rev_path (fun p -> f (p :: paths) (i + 1) xs) t x i
     in
-    match f [] 0 with
-    | None -> None
-    | Some paths -> Some (List.map List.rev paths)
+    f [] 1 xs
 
 end
 
